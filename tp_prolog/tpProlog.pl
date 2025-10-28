@@ -43,11 +43,7 @@ longitudMaxima(or(A, B), N) :-
 longitudMaxima(star(_), _) :- fail.
 
 
-cadenas([]).
 
-cadenas([S|R]) :-
-    symbol(S),        % el símbolo tiene que ser del alfabeto
-    cadenas(R).
 /*   3.3      cadena 
    Definir el predicado cadena(?X) que es verdadero cuando X es una lista de los
    s ́ımbolos del alfabeto. En caso de que X no est ́e instanciada, este predicado debe
@@ -71,39 +67,36 @@ cadena(X) :-
     natural(N),
     cadena_de_longitud(N, X).
 
-
-
 /*  3.4 match inst(+Cadena,+RegEx)
     Definir el predicado match_inst(+Cadena,+RegEx) que, dada una 
     cadena y una expresi on regular, es verdadero cuando Cadena es 
     aceptada por RegEx. 
 */
-% Caso base: cadena vacía y expresión vacía
+/* Caso base: cadena vacía y expresión vacía */
 match_inst([], empty).
 
-% Caso base: un símbolo simple
-match_inst([X], X) :- atom(X).
+/* Caso base: un símbolo simple*/
+match_inst([X], X) :- symbol(X).
 
-% Concatenación: la lista es A seguido de B
+/* Concatenación: la lista es A seguido de B */
 match_inst(Xs, concat(R1, R2)) :-
     append(A, B, Xs),
     match_inst(A, R1),
     match_inst(B, R2).
 
-% Alternativa: coincide con alguno de los dos
+/* % Alternativa: coincide con alguno de los dos*/
 match_inst(Xs, or(R1, R2)) :-
-    match_inst(Xs, R1);
-    match_inst(Xs, R2).
+    match_inst(Xs, R1),!;
+    match_inst(Xs, R2),!.
 
-% Estrella: cero o mas repeticiones
+/* % Estrella: cero o mas repeticiones*/
 match_inst(Xs, star(R)) :-
     Xs = [] ;
     (Xs = [_|_],
      append(A, B, Xs),
      A \= [],
      match_inst(A, R),
-     match_inst(B, star(R))).
-
+     match_inst(B, star(R))),!.
 
 
 /*  3.5 match(?Cadena,+RegEx)
@@ -112,10 +105,37 @@ match_inst(Xs, star(R)) :-
     regular RegEx.
 */
 
-match(Cad, RegEx) :-
-    cadena(Cad),
-    match_inst(Cad, RegEx).     
+match(Cadena, RegEx) :-
+    nonvar(Cadena),
+    match_inst(Cadena, RegEx).
 
+match(Cadena, RegEx) :-
+    var(Cadena),
+    longitudMaxima(RegEx, N),
+    between(0, N, L),
+    cadena_de_longitud(L, Cadena),
+    match_inst(Cadena, RegEx).
+
+match(Cadena, RegEx) :-
+    var(Cadena),
+    tieneEstrella(RegEx),
+    natural(L),
+    cadena_de_longitud(L, Cadena),
+    match_inst(Cadena, RegEx).    
+
+
+
+/* otra forma que encontre d ehacerlo*/
+
+match2(Cad, RegEx) :-  
+    longitudMaxima(RegEx, M), 
+    between(0, M, N),
+	cadena_de_longitud(N, Cad), 
+    match_inst(Cad, RegEx).
+match2(Cad, RegEx) :-  
+    not(longitudMaxima(RegEx,_)), 
+    cadena(Cad), 
+    match_inst(Cad, RegEx).
 
 /* 3.6 diferencia(?Cadena, +R1, +R2)
     Definir el predicado diferencia(?Cadena, +R1, +R2) que es verdadero cuando
