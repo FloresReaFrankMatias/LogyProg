@@ -51,9 +51,9 @@ longitudMaxima(star(_), _) :- fail.
 */
 
 
-natural(0).
-natural(N) :-
-    natural(M),
+logitud(0).
+logitud(N) :-
+    logitud(M),
     N is M + 1.
 
 cadena_de_longitud(0, []).
@@ -64,8 +64,10 @@ cadena_de_longitud(N, [S|R]) :-
     cadena_de_longitud(N1, R).
 
 cadena(X) :-
-    natural(N),
+    logitud(N),
     cadena_de_longitud(N, X).
+
+    
 
 /*  3.4 match inst(+Cadena,+RegEx)
     Definir el predicado match_inst(+Cadena,+RegEx) que, dada una 
@@ -97,8 +99,12 @@ match_inst(Xs, star(R)) :-
      A \= [],
      match_inst(A, R),
      match_inst(B, star(R))),!.
-
-
+%otra forma de hacer el star
+match_inst(Cadena, star(R)) :-
+    append(Parte1, Parte2, Cadena),
+    Parte1 \= [],              % evita bucle infinito
+    match_inst(Parte1, R),
+    match_inst(Parte2, star(R)).
 /*  3.5 match(?Cadena,+RegEx)
     Definir el predicado match(?Cadena,+RegEx) que extienda match_inst para
     que adem ́as pueda generar todas las cadenas aceptadas por la expresion
@@ -109,20 +115,11 @@ match(Cadena, RegEx) :-
     nonvar(Cadena),
     match_inst(Cadena, RegEx).
 
+% Si Cadena es variable, genero usando cadena/1 (definida en 3.3)
 match(Cadena, RegEx) :-
     var(Cadena),
-    longitudMaxima(RegEx, N),
-    between(0, N, L),
-    cadena_de_longitud(L, Cadena),
+    cadena(Cadena),
     match_inst(Cadena, RegEx).
-
-match(Cadena, RegEx) :-
-    var(Cadena),
-    tieneEstrella(RegEx),
-    natural(L),
-    cadena_de_longitud(L, Cadena),
-    match_inst(Cadena, RegEx).    
-
 
 
 /* otra forma que encontre d ehacerlo*/
@@ -136,6 +133,8 @@ match2(Cad, RegEx) :-
     not(longitudMaxima(RegEx,_)), 
     cadena(Cad), 
     match_inst(Cad, RegEx).
+
+
 
 /* 3.6 diferencia(?Cadena, +R1, +R2)
     Definir el predicado diferencia(?Cadena, +R1, +R2) que es verdadero cuando
